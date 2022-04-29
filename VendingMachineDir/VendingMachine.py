@@ -25,6 +25,9 @@ class VendingMachine:
         self.current_coins = self.default_state.copy()
         self.current_change_total = self.calc_current_change_total()
 
+        # Storing total user deposit for purchase ( e.g. multiple deposits )
+        self.user_deposited_total = 0
+
         # List of coin_names
         self.coin_names = [1, 2, 5, 10, 20, 50, 100, 200]
         self.coin_names.sort()

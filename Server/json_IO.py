@@ -7,24 +7,34 @@ Author  : Matthew Holsey
 import json
 
 
-def format_json_response(response, success, add_coins=False, errors=None):
+def format_json_response(response, success, add_change=False, errors=None, add_deposit_val=False,
+                         add_v_machine_coins=False):
     """
     Function to format parameters into a json object
 
-    :param response: String         : String contianing action state
-    :param success: Boolean         : True if success else False
-    :param add_coins: Dict          : Dict containing coins returned
-    :param errors: str/list/dict    : Variable containing any errors
+    :param add_deposit_val: int         : Add current depo amount to return value
+    :param response: String             : String contianing action state
+    :param success: Boolean             : True if success else False
+    :param add_change: Dict             : Dict containing change left from purchase
+    :param add_v_machine_coins: Boolean : Add Dict containing coins in machine
+    :param errors: str/list/dict        : Variable containing any errors
 
-    :return: Json object
+    :return: bytes
     """
     response_dict = {"response": response,
                      "success": success}
 
-    if add_coins:
-        if isinstance(add_coins, dict):
+    if add_change:
+        if isinstance(add_change, dict):
             # Adds a dict of the coins
-            response_dict["coins"] = add_coins
+            response_dict["coins"] = add_change
+
+    if add_deposit_val:
+        response_dict["deposit_total"] = add_deposit_val
+
+    if add_v_machine_coins:
+        if isinstance(add_v_machine_coins, dict):
+            response_dict["machine_coins"] = add_v_machine_coins
 
     if errors:
         errors_dict = {}
@@ -39,7 +49,7 @@ def format_json_response(response, success, add_coins=False, errors=None):
 
     json_object = json.dumps(response_dict, indent=4)
 
-    return json_object
+    return str(json_object).encode()
 
 
 def parse_json_in_to_dict(json_str):
@@ -49,7 +59,10 @@ def parse_json_in_to_dict(json_str):
     :param json_str : Json Obj   : Json read from program socket
     :return:        : Dict       : Dict representation of json
     """
-    return json.load(json_str)
+    try:
+        return json.loads(json_str)
 
+    except Exception as e:
+        raise ValueError(f"Cannot convert {json_str} to jsonObj")
 
 
