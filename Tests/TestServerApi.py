@@ -38,6 +38,9 @@ class TestServerApi(unittest.TestCase):
             print(e)
 
     def _create_connection(self):
+        """
+        Default create connection for each test
+        """
         try:
             connection = socket.socket()
             connection.connect(('127.0.0.1', 22222))
@@ -46,6 +49,10 @@ class TestServerApi(unittest.TestCase):
             self.fail(f"Problem creating connection to server! {e}")
 
     def test_valid_deposit(self):
+        """
+        Sending valid json
+        Expecting "success" boolean to return true
+        """
         connection = self._create_connection()
 
         j_input = {"deposit": {"coins": {"1": 1, "2": 1}}}
@@ -56,14 +63,22 @@ class TestServerApi(unittest.TestCase):
         received = connection.recv(4096)
         # decode to string
         received = received.decode()
+        json_obj = json.loads(received)
 
-        # Would be better to format back to JSON and check json["success"] == true
-        self.assertTrue("successful deposit" in str(received).lower(),
-                        "Expected test to work with good desposit")
+        if "success" in json_obj:
+            self.assertTrue(json_obj["success"] is True,
+                            "Expected successful action for valid deposit")
+        else:
+            self.fail("Did not receive 'success' boolean in json obj return")
 
         connection.close()
 
     def test_valid_deposit_total(self):
+        """
+        Sending valid json
+        Expecting "success" boolean to return true
+        Checking total deposit value is correct
+        """
         connection = self._create_connection()
 
         j_input = {"deposit": {"coins": {"1": 1, "2": 1}}}
@@ -77,15 +92,24 @@ class TestServerApi(unittest.TestCase):
         json_obj = json.loads(received)
 
         # Would be better to format back to JSON and check json["success"] == true
-        self.assertTrue("successful deposit" in str(received).lower(),
-                        "Expected test to work with good desposit")
+        if "success" in json_obj:
+            self.assertTrue(json_obj["success"] is True,
+                            "Expected successful action for valid deposit")
+        else:
+            self.fail("Did not receive 'success' boolean in json obj return")
 
         self.assertTrue(json_obj["deposit_total"] == 3,
-                        "Expected success to be false not true for bad input")
+                        "Expected total deposit value of 3 for valid deposit")
 
         connection.close()
 
     def test_deposit_ignores_bad_coins(self):
+        """
+        Sending valid json with a none-existent coin
+        Expecting "success" boolean to return true
+
+        Expecting deposit amount to only be the valid coin value total (1)
+        """
         connection = self._create_connection()
 
         j_input = {"deposit": {"coins": {"1": 1, "22": 1}}}
@@ -99,12 +123,21 @@ class TestServerApi(unittest.TestCase):
 
         json_obj = json.loads(received)
 
-        # Would be better to format back to JSON and check json["success"] == true
-        self.assertTrue("successful deposit" in str(received).lower())
+        if "success" in json_obj:
+            self.assertTrue(json_obj["success"] is True,
+                            "Expected successful action for valid deposit")
+        else:
+            self.fail("Did not receive 'success' boolean in json obj return")
+
+        self.assertTrue(json_obj["deposit_total"] == 1,
+                        "Expected total deposit value of 3 for valid deposit")
 
         connection.close()
 
     def test_invalid_deposit_format(self):
+        """
+        Checking invalid deposit format returns success = False
+        """
         connection = self._create_connection()
 
         j_input = {"deposit": {"coin": {"1": 1, "22": 1}}}
@@ -137,6 +170,11 @@ class TestServerApi(unittest.TestCase):
     """
 
     def test_valid_purchase(self):
+        """
+        Sending a valid purchase
+        Expecting boolean 'success' = True
+
+        """
         connection = self._create_connection()
 
         j_input = {"deposit": {"coins": {"1": 1, "2": 1}}, "purchase": {"value": 1}}
@@ -163,6 +201,11 @@ class TestServerApi(unittest.TestCase):
         connection.close()
 
     def test_valid_purchase_change(self):
+        """
+        Sending a valid purchase
+        Expecting boolean 'success' = True
+        Checking change returned is valid
+        """
         connection = self._create_connection()
 
         j_input = {"deposit": {"coins": {"1": 1, "2": 1}}, "purchase": {"value": 1}}
@@ -189,6 +232,11 @@ class TestServerApi(unittest.TestCase):
         connection.close()
 
     def test_exact_deposit(self):
+        """
+        Sending a valid purchase
+        Expecting boolean 'success' = True
+        Checking no returned change as purchase value is same as total deposit
+        """
         connection = self._create_connection()
 
         j_input = {"deposit": {"coins": {"1": 1, "2": 1}}, "purchase": {"value": 3}}
@@ -217,6 +265,11 @@ class TestServerApi(unittest.TestCase):
         connection.close()
 
     def test_purchase_without_deposit(self):
+        """
+        Sending 'purchase' api request without a 'deposit'
+        Expecting boolean 'success' = False
+
+        """
         connection = self._create_connection()
 
         j_input = {"purchase": {"value": 3}}
@@ -243,6 +296,11 @@ class TestServerApi(unittest.TestCase):
         connection.close()
 
     def test_too_small_deposit(self):
+        """
+        Sending a purchase request that is greater than amount deposited
+        Expecting boolean 'success' = False
+
+        """
         connection = self._create_connection()
 
         j_input = {"deposit": {"coins": {"1": 1, "2": 1}}, "purchase": {"value": 4}}

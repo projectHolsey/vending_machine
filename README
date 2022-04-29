@@ -1,0 +1,61 @@
+Documenting API and assumptions in code
+
+To run code:
+    > Pull from GIT
+    > python main.py
+
+Program parameters:
+    --help
+        Show help
+    --state_file    FILE
+        E.g. --state_file=my_state_file
+        Add default 'state' for vending machine
+        See /resources/is.csv for example
+
+        Note - Missing coins will be kept as default '5' quantity
+
+
+API:
+    Json formatted I/O
+
+    See /Tests/TestServerApi.py for examples of api
+
+    ACCEPTED INPUT:
+        Deposit:
+            '{"deposit": {"coins": {"1": 1, "2": 1}}'
+
+        Purchase - Requires deposit:
+            {"deposit": {"coins": {"1": 1, "2": 1}}, "purchase": {"value": 1}}
+
+    RETURN VALUES:
+         :param response: String             : String containing overview of action state
+         :param success: Boolean             : True if success else False
+         :param coins: Dict                  : Dict containing change left from purchase
+         :param deposit_value: int           : Current depo amount to return value
+         :param machine_coins: Dict          : Dict containing coins in machine
+         :param errors: list/dict            : Contains any errors from I/O
+
+
+         {
+         "response"      : "Successful deposit",
+         "success"       : True,
+         "coins"         : { "1": 1, "2", 2 },
+         "deposit_value" : 300,
+
+
+Assumptions:
+    > Each 'connection' is valid for 1 action
+        To make multiple deposits, must make multiple async connections
+
+    > Only accepts 1 connection simultaneously
+        ( Because 4 people can't use 1 vending machine at the same time )
+
+    > Making multiple deposits will add up a total until a purchase is made
+
+    > State is only set on start-up
+
+    > All values are in pence
+        Coins "£1" and "£2" are represented by "100" and "200" respectively
+        All deposit values are to be sent in pence value
+            "£12.34" > "1234"
+
